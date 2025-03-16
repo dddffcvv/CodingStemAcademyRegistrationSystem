@@ -1,6 +1,8 @@
 import mysql.connector
 from flask import Flask, request, jsonify
 
+import * from assignment
+
 my_db = mysql.connector.connect(
     host="192.168.50.210",
     user="class_user",
@@ -14,6 +16,7 @@ my_db = mysql.connector.connect(
 def add_user(first_name, last_name, birth_date, gender, 
              email, phone, address, guardian, guardian_phone, 
              health_ins, health_ins_num, role, grade_level = None):
+
     cursor = my_db.cursor()
     sql = "INSERT INTO users " \
     "(first_name, last_name, birth_date, gender, email, phone, address, guardian, guardian_phone, health_ins, " \
