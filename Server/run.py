@@ -23,6 +23,20 @@ def add_user(first_name, last_name, birth_date, gender,
     cursor.execute(sql, vals)
     my_db.commit()
 
+#POST Class
+def add_class(teacher_id, class_name, subject, semester_id):
+    cursor = my_db.cursor()
+    sql = "INSERT INTO classes (teacher_id, class_name, subject, semester_id) VALUES(%s, %s, %s, %s)"
+    vals = (teacher_id, class_name, subject, semester_id)
+    cursor.execute(sql, vals)
+    my_db.commit()
+
+    
+
+
+
+
+
 ###################### DO NOT TOUCH #######################################
 def add_auth(user_id, password):
     cursor = my_db.cursor()
@@ -103,6 +117,26 @@ def update_user(id, first_name, last_name, birth_date, gender,
     my_db.commit()
     return cursor.fetchone()
 
+#PUT Class
+def update_class(id, teacher_id, class_name, subject, semester_id):
+    cursor = my_db.cursor()
+    sql = "SELECT * FROM classes WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    classes = cursor.fetchone()
+    if classes is None:
+        return None
+    sql = "UPDATE classes SET teacher_id = %s, class_name = %s, subject = %s, semester_id = %s"
+    vals = (
+        teacher_id if teacher_id else classes["teacher_id"], class_name if class_name else classes["class_name"], subject if subject else classes["subject"], semester_id if semester_id else classes["semester_id"], id
+    )
+    cursor.execute(sql, vals)
+    my_db.commit()
+    return cursor.fetchone()
+
+
+
+
 
 # DELETE Data
 ###################### DO NOT TOUCH #######################################
@@ -113,9 +147,20 @@ def delete_user(id):
     cursor.execute(sql, val)
     my_db.commit()
 
+#DELETE classes
+def delete_class(id):
+    cursor = my_db.cursor()
+    sql = "DELETE FROM classes WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    my_db.commit()
+
+
+
 
 if __name__ == '__main__':
     if my_db.is_connected():
         print("Connected to MySQL Database")
     else:
         print("Failed to connect to MySQL Database")
+
