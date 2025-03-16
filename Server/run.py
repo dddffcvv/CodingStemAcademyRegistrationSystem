@@ -23,6 +23,14 @@ def add_user(first_name, last_name, birth_date, gender,
     cursor.execute(sql, vals)
     my_db.commit()
 
+
+def add_class_students(class_id, user_id):
+    cursor = my_db.cursor()
+    sql = "INSERT INTO class_students (class_id, user_id) VALUES (%s, %s)"
+    vals = (class_id, user_id)
+    cursor.execute(sql, vals)
+    my_db.commit()
+
 ###################### DO NOT TOUCH #######################################
 def add_auth(user_id, password):
     cursor = my_db.cursor()
@@ -57,6 +65,11 @@ def login(email, password):
 def get_users():
     cursor = my_db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM users")
+    return cursor.fetchall()
+
+def get_class_students():
+    cursor = my_db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM class_students")
     return cursor.fetchall()
 
 
@@ -113,6 +126,12 @@ def delete_user(id):
     cursor.execute(sql, val)
     my_db.commit()
 
+def delete_student_class(student_id, class_id):
+    cursor = my_db.cursor()
+    sql = "DELETE FROM class_students WHERE student_id = %s AND class_id = %s"
+    val = (student_id, class_id)
+    cursor.execute(sql, val)
+    my_db.commit()
 
 if __name__ == '__main__':
     if my_db.is_connected():
