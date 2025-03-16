@@ -8,7 +8,9 @@ my_db = mysql.connector.connect(
     database="Registration"
 )
 
+
 # POST Data 
+###################### DO NOT TOUCH #######################################
 def add_user(first_name, last_name, birth_date, gender, 
              email, phone, address, guardian, guardian_phone, 
              health_ins, health_ins_num, role, grade_level = None):
@@ -21,6 +23,7 @@ def add_user(first_name, last_name, birth_date, gender,
     cursor.execute(sql, vals)
     my_db.commit()
 
+###################### DO NOT TOUCH #######################################
 def add_auth(user_id, password):
     cursor = my_db.cursor()
     sql = "INSERT INTO auth (user_id, password) VALUES (%s, %s)"
@@ -30,6 +33,7 @@ def add_auth(user_id, password):
 
 
 # GET Data
+###################### DO NOT TOUCH #######################################
 def login(email, password):
     cursor = my_db.cursor(dictionary=True)
     # Check if user with email exists
@@ -49,12 +53,14 @@ def login(email, password):
     return user
 
 
+###################### DO NOT TOUCH #######################################
 def get_users():
     cursor = my_db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM users")
     return cursor.fetchall()
 
 
+###################### DO NOT TOUCH #######################################
 def get_user_by_name(first_name, last_name):
     cursor = my_db.cursor(dictionary=True)
     sql = "SELECT * FROM users WHERE first_name = %s AND last_name = %s"
@@ -63,6 +69,7 @@ def get_user_by_name(first_name, last_name):
     return cursor.fetchall()
 
 
+###################### DO NOT TOUCH #######################################
 def get_user_by_id(id):
     cursor = my_db.cursor(dictionary=True)
     sql = "SELECT * FROM users WHERE id = %s"
@@ -72,6 +79,7 @@ def get_user_by_id(id):
 
 
 # PUT Data 
+###################### DO NOT TOUCH #######################################
 def update_user(id, first_name, last_name, birth_date, gender, 
              email, phone, address, guardian, guardian_phone, 
              health_ins, health_ins_num, role, grade_level = None):
@@ -97,6 +105,7 @@ def update_user(id, first_name, last_name, birth_date, gender,
 
 
 # DELETE Data
+###################### DO NOT TOUCH #######################################
 def delete_user(id):
     cursor = my_db.cursor()
     sql = "DELETE FROM users WHERE id = %s"
