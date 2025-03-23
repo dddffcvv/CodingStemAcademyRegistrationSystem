@@ -8,7 +8,8 @@ my_db = mysql.connector.connect(
     database="Registration"
 )
 
-
+app = Flask(__name__)
+ 
 # POST Data 
 ###################### DO NOT TOUCH #######################################
 def add_user(first_name, last_name, birth_date, gender, 
@@ -24,13 +25,21 @@ def add_user(first_name, last_name, birth_date, gender,
     my_db.commit()
 
 #POST Class
-def add_class(teacher_id, class_name, subject, semester_id):
+@app.route('/add_class', methods=['POST'])
+def add_class():
+    data = request.get_json()
+    #teacher_id, class_name, subject, semester_id
+    teacher_id = data.get('teacher_id')
+    class_name = data.get('class_name')
+    subject = data.get('subject')
+    semester_id = data.get('semester_id')
+
     cursor = my_db.cursor()
     sql = "INSERT INTO classes (teacher_id, class_name, subject, semester_id) VALUES(%s, %s, %s, %s)"
     vals = (teacher_id, class_name, subject, semester_id)
     cursor.execute(sql, vals)
     my_db.commit()
-
+    return jsonify({'message': 'Class has been added successfully'})
     
 
 
@@ -73,6 +82,19 @@ def get_users():
     cursor.execute("SELECT * FROM users")
     return cursor.fetchall()
 
+@app.route('/classes', methods=['GET'])
+def get_classes():
+    cursor = my_db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM classes")
+    return jsonify({'message': 'All classes retrieved', 'classes': cursor.fetchall()})
+
+@app.route('/classes/<int:id>', methods=['GET'])
+def get_class(id):
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM classes WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    return jsonify({'message': 'Class retrieved', 'class': cursor.fetchone()})
 
 ###################### DO NOT TOUCH #######################################
 def get_user_by_name(first_name, last_name):
@@ -118,7 +140,17 @@ def update_user(id, first_name, last_name, birth_date, gender,
     return cursor.fetchone()
 
 #PUT Class
-def update_class(id, teacher_id, class_name, subject, semester_id):
+@app.route('/update_class/<int:id>', methods=['PUT'])
+def update_class(id):
+
+
+    data = request.get_json()
+    teacher_id = data.get('teacher_id')
+    class_name = data.get('class_name')
+    subject = data.get('subject')
+    semester_id = data.get('semester_id')
+
+
     cursor = my_db.cursor()
     sql = "SELECT * FROM classes WHERE id = %s"
     val = (id, )
@@ -132,7 +164,7 @@ def update_class(id, teacher_id, class_name, subject, semester_id):
     )
     cursor.execute(sql, vals)
     my_db.commit()
-    return cursor.fetchone()
+    return jsonify({'message': 'Class was changed', 'class': cursor.fetchone()})
 
 
 
@@ -148,19 +180,23 @@ def delete_user(id):
     my_db.commit()
 
 #DELETE classes
+@app.route('/delete_class/<int:id>', methods=['DELETE'])
 def delete_class(id):
     cursor = my_db.cursor()
-    sql = "DELETE FROM classes WHERE id = %s"
+    sql = "DELEzTE FROM classes WHERE id = %s"
     val = (id, )
     cursor.execute(sql, val)
     my_db.commit()
+    return jsonify({'message': 'Class has been deleted'})
 
 
 
 
 if __name__ == '__main__':
-    if my_db.is_connected():
+    if my_db.is_connected():    
         print("Connected to MySQL Database")
+        app.run(debug=True)
     else:
         print("Failed to connect to MySQL Database")
 
+ 
