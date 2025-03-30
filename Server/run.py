@@ -1,6 +1,8 @@
 import mysql.connector
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import bcrypt
 
 my_db = mysql.connector.connect(
     host="192.168.50.210",
@@ -10,9 +12,12 @@ my_db = mysql.connector.connect(
 )
 
 app = Flask(__name__)
+## TODO: CREATE REAL SECRET KEY
+app.config["JWT_SECRET_KEY"] = "temporary secret key"
+jwt = JWTManager(app)
 CORS(app)
 
-# POST Data 
+# POST Data
 @app.route('/register', methods=['POST'])
 def add_user():
     data = request.get_json()
@@ -32,10 +37,12 @@ def add_user():
 
     cursor = my_db.cursor()
 
+    # TODO: Add validation for data
+
     sql = "INSERT INTO users " \
     "(first_name, last_name, birth_date, gender, email, phone, address, guardian, guardian_phone, health_ins, " \
     "health_ins_num, role, grade_level) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-    vals = (first_name, last_name, birth_date, gender, email, phone, address, guardian, guardian_phone, 
+    vals = (first_name, last_name, birth_date, gender, email, phone, address, guardian, guardian_phone,
              health_ins, health_ins_num, role, grade_level)
     cursor.execute(sql, vals)
     my_db.commit()
@@ -46,9 +53,11 @@ def add_user():
 
 ###################### DO NOT TOUCH #######################################
 def add_auth(user_id, password):
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
     cursor = my_db.cursor()
     sql = "INSERT INTO auths (user_id, password) VALUES (%s, %s)"
-    vals = (user_id, password)
+    vals = (user_id, hashed_password)
     cursor.execute(sql, vals)
     my_db.commit()
     return jsonify({"message": "Auth added"})
@@ -68,15 +77,25 @@ def login():
     cursor.execute(sql, val)
     user = cursor.fetchone()
     if user is None:
-        return jsonify({"message": "User not found"})
+        return jsonify({"message": "Invalid email or password"})
     # Check if password matches
-    sql = "SELECT * FROM auths WHERE user_id = %s AND password = %s"
-    val = (user['id'], password)
+    sql = "SELECT * FROM auths WHERE user_id = %s"
+    val = (user['id'], )
     cursor.execute(sql, val)
     auth = cursor.fetchone()
-    if auth is None:
+    if auth is None or not bcrypt.checkpw(password.encode('utf-8'), auth['password'].encode('utf-8')):
         return jsonify({"message": "Invalid password"})
-    return jsonify({"message": "Login successful", "user": user})
+
+    user_info = {
+        "id": user['id'],
+        'email': user['email'],
+        'role': user['role'],
+        'first_name': user['first_name'],
+        'last_name': user['last_name'],
+    }
+
+    access_token = create_access_token(identity=user_info)
+    return jsonify({"message": "Login successful", "access_token": access_token})
 
 
 @app.route('/users', methods=['GET'])
@@ -106,7 +125,7 @@ def get_user_by_id():
     return jsonify({"message": "User retrieved", "user": cursor.fetchone()})
 
 
-# PUT Data 
+# PUT Data
 @app.route('/users/update', methods=['PUT'])
 def update_user():
     data = request.get_json()
@@ -135,7 +154,7 @@ def update_user():
     sql = "UPDATE users SET first_name = %s, last_name = %s, birth_date" \
     " = %s, gender = %s, email = %s, phone = %s, address = %s, guardian = %s, guardian_phone = %s, health_ins = %s, " \
     "health_ins_num = %s, role = %s, grade_level = %s WHERE id = %s"
-    vals = (first_name if first_name else user["first_name"], last_name if last_name else user["last_name"], 
+    vals = (first_name if first_name else user["first_name"], last_name if last_name else user["last_name"],
             birth_date if birth_date else user["birth_date"], gender if gender else user["gender"], email if email else user["email"],
             phone if phone else user["phone"], address if address else user["address"], guardian if guardian else user["guardian"],
             guardian_phone if guardian_phone else user["guardian_phone"], health_ins if health_ins else user["health_ins"],
@@ -147,7 +166,7 @@ def update_user():
 
 
 # DELETE Data
-@app.route('/users/delete', methods=['DELETE'])
+@app.route('/users', methods=['DELETE'])
 def delete_user():
     id = request.args.get('id')
     cursor = my_db.cursor()
