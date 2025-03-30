@@ -1,5 +1,8 @@
 import mysql.connector
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import bcrypt
 
 import * from assignment
 
@@ -10,34 +13,65 @@ my_db = mysql.connector.connect(
     database="Registration"
 )
 
+app = Flask(__name__)
+## TODO: CREATE REAL SECRET KEY
+app.config["JWT_SECRET_KEY"] = "temporary secret key"
+jwt = JWTManager(app)
+CORS(app)
 
-# POST Data 
-###################### DO NOT TOUCH #######################################
-def add_user(first_name, last_name, birth_date, gender, 
-             email, phone, address, guardian, guardian_phone, 
-             health_ins, health_ins_num, role, grade_level = None):
+# POST Data
+@app.route('/register', methods=['POST'])
+def add_user():
+    data = request.get_json()
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    birth_date = data.get('birth_date')
+    gender = data.get('gender')
+    email = data.get('email')
+    phone = data.get('phone')
+    address = data.get('address')
+    guardian = data.get('guardian')
+    guardian_phone = data.get('guardian_phone')
+    health_ins = data.get('health_ins')
+    health_ins_num = data.get('health_ins_num')
+    role = data.get('role')
+    grade_level = data.get('grade_level', None)
 
     cursor = my_db.cursor()
+
+    # TODO: Add validation for data
+
     sql = "INSERT INTO users " \
     "(first_name, last_name, birth_date, gender, email, phone, address, guardian, guardian_phone, health_ins, " \
     "health_ins_num, role, grade_level) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-    vals = (first_name, last_name, birth_date, gender, email, phone, address, guardian, guardian_phone, 
+    vals = (first_name, last_name, birth_date, gender, email, phone, address, guardian, guardian_phone,
              health_ins, health_ins_num, role, grade_level)
     cursor.execute(sql, vals)
     my_db.commit()
+    user_id = cursor.lastrowid
+    add_auth(user_id, data.get('password'))
+    return jsonify({"message": "User added"})
+
 
 ###################### DO NOT TOUCH #######################################
 def add_auth(user_id, password):
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
     cursor = my_db.cursor()
-    sql = "INSERT INTO auth (user_id, password) VALUES (%s, %s)"
-    vals = (user_id, password)
+    sql = "INSERT INTO auths (user_id, password) VALUES (%s, %s)"
+    vals = (user_id, hashed_password)
     cursor.execute(sql, vals)
     my_db.commit()
+    return jsonify({"message": "Auth added"})
 
 
 # GET Data
-###################### DO NOT TOUCH #######################################
-def login(email, password):
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
     cursor = my_db.cursor(dictionary=True)
     # Check if user with email exists
     sql = "SELECT * FROM users WHERE email = %s"
@@ -45,58 +79,84 @@ def login(email, password):
     cursor.execute(sql, val)
     user = cursor.fetchone()
     if user is None:
-        return None
+        return jsonify({"message": "Invalid email or password"})
     # Check if password matches
-    sql = "SELECT * FROM auth WHERE user_id = %s AND password = %s"
-    val = (user['id'], password)
+    sql = "SELECT * FROM auths WHERE user_id = %s"
+    val = (user['id'], )
     cursor.execute(sql, val)
     auth = cursor.fetchone()
-    if auth is None:
-        return None
-    return user
+    if auth is None or not bcrypt.checkpw(password.encode('utf-8'), auth['password'].encode('utf-8')):
+        return jsonify({"message": "Invalid password"})
+
+    user_info = {
+        "id": user['id'],
+        'email': user['email'],
+        'role': user['role'],
+        'first_name': user['first_name'],
+        'last_name': user['last_name'],
+    }
+
+    access_token = create_access_token(identity=user_info)
+    return jsonify({"message": "Login successful", "access_token": access_token})
 
 
-###################### DO NOT TOUCH #######################################
+@app.route('/users', methods=['GET'])
 def get_users():
     cursor = my_db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM users")
-    return cursor.fetchall()
+    return jsonify({"message": "Retrieved All Users", "users": cursor.fetchall()})
 
 
-###################### DO NOT TOUCH #######################################
-def get_user_by_name(first_name, last_name):
+@app.route('/users/by-name', methods=['GET'])
+def get_user_by_name():
+    first_name = request.args.get('first_name')
+    last_name = request.args.get('last_name')
     cursor = my_db.cursor(dictionary=True)
     sql = "SELECT * FROM users WHERE first_name = %s AND last_name = %s"
     val = (first_name, last_name)
     cursor.execute(sql, val)
-    return cursor.fetchall()
+    return jsonify({"message": "Retrieved All Users by name", "users": cursor.fetchall()})
 
-
-###################### DO NOT TOUCH #######################################
-def get_user_by_id(id):
+@app.route('/users', methods=['GET'])
+def get_user_by_id():
+    id = request.args.get('id')
     cursor = my_db.cursor(dictionary=True)
     sql = "SELECT * FROM users WHERE id = %s"
     val = (id, )
     cursor.execute(sql, val)
-    return cursor.fetchone()
+    return jsonify({"message": "User retrieved", "user": cursor.fetchone()})
 
 
-# PUT Data 
-###################### DO NOT TOUCH #######################################
-def update_user(id, first_name, last_name, birth_date, gender, 
-             email, phone, address, guardian, guardian_phone, 
-             health_ins, health_ins_num, role, grade_level = None):
+# PUT Data
+@app.route('/users/update', methods=['PUT'])
+def update_user():
+    data = request.get_json()
+    id = data.get('id')
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    birth_date = data.get('birth_date')
+    gender = data.get('gender')
+    email = data.get('email')
+    phone = data.get('phone')
+    address = data.get('address')
+    guardian = data.get('guardian')
+    guardian_phone = data.get('guardian_phone')
+    health_ins = data.get('health_ins')
+    health_ins_num = data.get('health_ins_num')
+    role = data.get('role')
+    grade_level = data.get('grade_level', None)
+
     cursor = my_db.cursor(dictionary=True)
     sql = "SELECT * FROM users WHERE id = %s"
     val = (id, )
     cursor.execute(sql, val)
     user = cursor.fetchone()
     if user is None:
-        return None
+        return jsonify({"message": "User not found"})
     sql = "UPDATE users SET first_name = %s, last_name = %s, birth_date" \
     " = %s, gender = %s, email = %s, phone = %s, address = %s, guardian = %s, guardian_phone = %s, health_ins = %s, " \
     "health_ins_num = %s, role = %s, grade_level = %s WHERE id = %s"
-    vals = (first_name if first_name else user["first_name"], last_name if last_name else user["last_name"], 
+    vals = (first_name if first_name else user["first_name"], last_name if last_name else user["last_name"],
             birth_date if birth_date else user["birth_date"], gender if gender else user["gender"], email if email else user["email"],
             phone if phone else user["phone"], address if address else user["address"], guardian if guardian else user["guardian"],
             guardian_phone if guardian_phone else user["guardian_phone"], health_ins if health_ins else user["health_ins"],
@@ -104,17 +164,19 @@ def update_user(id, first_name, last_name, birth_date, gender,
             grade_level if grade_level else user["grade_level"], id)
     cursor.execute(sql, vals)
     my_db.commit()
-    return cursor.fetchone()
+    return jsonify({"message": "User updated"})
 
 
 # DELETE Data
-###################### DO NOT TOUCH #######################################
-def delete_user(id):
+@app.route('/users', methods=['DELETE'])
+def delete_user():
+    id = request.args.get('id')
     cursor = my_db.cursor()
     sql = "DELETE FROM users WHERE id = %s"
     val = (id, )
     cursor.execute(sql, val)
     my_db.commit()
+    return jsonify({"message": "User deleted"})
 
 
 if __name__ == '__main__':
@@ -122,3 +184,4 @@ if __name__ == '__main__':
         print("Connected to MySQL Database")
     else:
         print("Failed to connect to MySQL Database")
+    app.run(debug=True)
