@@ -5,8 +5,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 import bcrypt
 
 my_db = mysql.connector.connect(
-    host="127.0.0.1",  # use at home
-#     host="192.168.50.210", # use at school
+    host="192.168.50.210", # use at school
     user="class_user",
     password="password",
     database="Registration"
