@@ -5,7 +5,8 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 import bcrypt
 
 my_db = mysql.connector.connect(
-    host="192.168.50.210",
+    host="127.0.0.1",  # use at home
+#     host="192.168.50.210", # use at school
     user="class_user",
     password="password",
     database="Registration"
@@ -47,7 +48,17 @@ def add_user():
     my_db.commit()
     user_id = cursor.lastrowid
     add_auth(user_id, data.get('password'))
-    return jsonify({"message": "User added"})
+
+    user_info = {
+        "id": user_id,
+        'email': email,
+        'role': role,
+        'first_name': first_name,
+        'last_name': last_name,
+    }
+
+    access_token = create_access_token(identity=user_info)
+    return jsonify({"message": "Login successful", "access_token": access_token})
 
 
 #POST Class
@@ -66,9 +77,44 @@ def add_class():
     cursor.execute(sql, vals)
     my_db.commit()
     return jsonify({'message': 'Class has been added successfully'})
-    
 
+@app.route('/add_student_to_class', methods=['POST'])
+def add_class_students():
+    try:
+        data = request.get_json()
+        class_id = data.get('class_id')
+        user_id = data.get('user_id')
 
+        if not class_id or not user_id:
+            return jsonify({'message': 'class_id and user_id are required'}), 400
+
+        cursor = my_db.cursor()
+        sql = "INSERT INTO class_students (class_id, user_id) VALUES (%s, %s)"
+        vals = (class_id, user_id)
+        cursor.execute(sql, vals)
+        my_db.commit()
+        return jsonify({'message': 'Student has been added to class successfully'})
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return jsonify({'message': 'An error occurred', 'error': str(err)}), 500
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        return jsonify({'message': 'An unexpected error occurred', 'error': str(e)}), 500
+
+@app.route('/add_multiple_classes_to_student', methods=['POST'])
+def add_multiple_classes():
+    data = request.get_json()
+    classes = data.get('classes')
+    user_id = data.get('user_id')
+    if not classes:
+        return jsonify({'message': 'No classes provided'}), 400
+    cursor = my_db.cursor()
+    for class_id in classes:
+        sql = "INSERT INTO class_students (class_id, user_id) VALUES (%s, %s)"
+        vals = (class_id, user_id)
+        cursor.execute(sql, vals)
+        my_db.commit()
+    return jsonify({'message': 'Students have been added to classes successfully'})
 
 
 
@@ -139,6 +185,14 @@ def get_class(id):
     cursor.execute(sql, val)
     return jsonify({'message': 'Class retrieved', 'class': cursor.fetchone()})
 
+@app.route('/classes/teachers/<int:id>', methods=['GET'])
+def get_classes_by_teacher(id):
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM classes WHERE teacher_id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    return jsonify({'message': 'Classes retrieved', 'classes': cursor.fetchall()})
+
 @app.route('/users/by-name', methods=['GET'])
 def get_user_by_name():
     first_name = request.args.get('first_name')
@@ -201,8 +255,6 @@ def update_user():
 #PUT Class
 @app.route('/update_class/<int:id>', methods=['PUT'])
 def update_class(id):
-
-
     data = request.get_json()
     teacher_id = data.get('teacher_id')
     class_name = data.get('class_name')
@@ -254,7 +306,7 @@ def delete_class(id):
 
 
 if __name__ == '__main__':
-    if my_db.is_connected():    
+    if my_db.is_connected():
         print("Connected to MySQL Database")
         app.run(debug=True)
     else:

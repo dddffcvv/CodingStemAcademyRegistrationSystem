@@ -3,27 +3,26 @@ import axios from 'axios';
 import config from '../config';
 
 
-function SignUp() {
-    
-      
-    const [formData, setFormData] = useState({ 
-
+export default function AddClasses() {
+    const [formData, setFormData] = useState({
         teacher_id: '',
         subject: '',
         semester_id: '',
         class_name: '',
-
     });
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({
+            ...formData,
+            [name]: value
+        });
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
-    
-        axios.post(`${config.backendUrl}/add_class`, {
-          formData['teacher_id'],
-          formData.subject,
-          formData.semester_id,
-          formData.class_name
-        }).then(response => {
+
+        axios.post(`${config.backendUrl}/add_class`, formData).then(response => {
           console.log("Successfully added class: " + response.data['message']);
         }).catch( error => {
           console.log(error);
@@ -40,7 +39,7 @@ function SignUp() {
                     value={formData.teacher_id}
                     onChange={handleChange}
                     placeholder="Teacher ID"
-                />3
+                />
                 <br />
                 <input
                     type="text"
@@ -70,5 +69,3 @@ function SignUp() {
         </div>
     )
 }
-
-export default SignUp;

@@ -23,6 +23,11 @@ const TeacherDash = () => {
       <Link href="/calendar">View Calendar</Link>
       <br />
       <Link href="/grades">View Grades</Link>
+      <br />
+      <button onClick={() => {
+        localStorage.removeItem('token');
+        window.location.href = '/';
+      }}>Logout</button>
     </div>
   );
 }
