@@ -1,3 +1,12 @@
+import mysql.connector
+
+my_db = mysql.connector.connect(
+    host="localhost",
+#     host="192.168.50.210",
+    user="class_user",
+    password="password",
+    database="Registration"
+)
 
 
 # ------------ CLASS STUDENT -----------------
@@ -50,63 +59,77 @@ def delete_class_id(class_id):
     cursor.execute(sql, val)
     my_db.commit()
 
- 
+
 #------------ CLASS ---------------------------
 
- def classes(id, teacher_id, class_name, subject, semester_id):
-     sql = "INSERT INTO classes " \
-     "(id, teacher_id, class_name, subject, semester_id) VALUES (%s, %s, %s, %s, %s)"
-     val = (id, teacher_id, class_name, subject, semester_id)
-     cursor.execute(sql, vals)
-     my_db.commit()
- 
- def get_class_by_name():
-     cursor = my_db.cursor(dictionary=True)
-     cursor.execute("SELECT * FROM class_name")
-     return cursor.fetchall()
- 
- def get_class_by_id(id):
-     cursor = my_db.cursor(dictionary=True)
-     sql = "SELECT * FROM class_name WHERE id = %s"
-     val = (id, )
-     cursor.execute(sql, val)
-     return cursor.fetchone()
- 
- def update_class(id, teacher_id, class_name, subject, semester_id):
-     cursor = my_db.cursor(dictionary=True)
-     
-     sql = "SELECT * FROM class_name WHERE id = %s"
-     val = (id,)
-     cursor.execute(sql, val)
-     existing_class = cursor.fetchone()
-     
-     if existing_class is None:
-         return None
-     
-     sql = """UPDATE class_name 
-              SET teacher_id = %s, class_name = %s, subject = %s, semester_id = %s 
-              WHERE id = %s"""
-     vals = (teacher_id, class_name, subject, semester_id, id)
-     cursor.execute(sql, vals)
-     my_db.commit()
-     
-     return cursor.fetchone
- 
- def delete_class(id):
-     cursor = my_db.cursor()
-     sql = "DELETE FROM class_name WHERE id = %s"
-     val = (id, )
-     cursor.execute(sql, val)
-     my_db.commit()
+def classes(id, teacher_id, class_name, subject, semester_id):
+    sql = "INSERT INTO classes " \
+    "(id, teacher_id, class_name, subject, semester_id) VALUES (%s, %s, %s, %s, %s)"
+    val = (id, teacher_id, class_name, subject, semester_id)
+    cursor.execute(sql, vals)
+    my_db.commit()
+
+def get_class_by_name():
+    cursor = my_db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM class_name")
+    return cursor.fetchall()
+
+def get_classes_by_teacher_id(teacher_id):
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM classes WHERE teacher_id = %s"
+    val = (teacher_id, )
+    cursor.execute(sql, val)
+    return cursor.fetchall()
+
+def get_class_by_id(id):
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM class_students WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    return cursor.fetchone()
+
+def get_classes_by_id(id):
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM class_students WHERE user_id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    return cursor.fetchall()
+
+def update_class(id, teacher_id, class_name, subject, semester_id):
+    cursor = my_db.cursor(dictionary=True)
+
+    sql = "SELECT * FROM class_name WHERE id = %s"
+    val = (id,)
+    cursor.execute(sql, val)
+    existing_class = cursor.fetchone()
+
+    if existing_class is None:
+     return None
+
+    sql = """UPDATE class_name
+          SET teacher_id = %s, class_name = %s, subject = %s, semester_id = %s
+          WHERE id = %s"""
+    vals = (teacher_id, class_name, subject, semester_id, id)
+    cursor.execute(sql, vals)
+    my_db.commit()
+
+    return cursor.fetchone
+
+def delete_class(id):
+    cursor = my_db.cursor()
+    sql = "DELETE FROM class_name WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    my_db.commit()
 
 #------------ ASSIGNMENTS
 
-def add_assignment(id, class_id, description, due_date):
+def add_assignment(class_id, description, due_date):
     cursor = my_db.cursor()
     sql = "INSERT INTO assignments " \
-    "(id, class_id, description, due_date, " \
-    "VALUES (%s, %s, %s, %s)"
-    vals = (id, class_id, description, due_date)
+    "(class_id, description, due_date) " \
+    "VALUES (%s, %s, %s)"
+    vals = (class_id, description, due_date)
     cursor.execute(sql, vals)
     my_db.commit()
 
@@ -115,6 +138,13 @@ def add_assignment(id, class_id, description, due_date):
 def get_assignment():
     cursor = my_db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM assignments")
+    return cursor.fetchall()
+
+def get_assignments_by_class(class_id):
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM assignments WHERE class_id = %s"
+    val = (class_id, )
+    cursor.execute(sql, val)
     return cursor.fetchall()
 
 
@@ -136,7 +166,7 @@ def update_assignment(id, class_id, description, due_date):
         return None
     sql = "UPDATE assignments SET class_id = %s, description" \
     " = %s, due_date = %s, WHERE id = %s"
-    vals = (class_id if class_id else assignment["class_id"], description if description else assignment["description"], 
+    vals = (class_id if class_id else assignment["class_id"], description if description else assignment["description"],
             due_date if due_date else assignment["due_date"], id)
     cursor.execute(sql, vals)
     my_db.commit()
