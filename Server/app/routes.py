@@ -143,7 +143,7 @@ def get_assignments_by_class_route():
 @app.route('/classes/<int:id>', methods=['GET'])
 def get_classes_by_id_route(id):
     classes = get_classes_by_id(id)
-    return jsonify({"message": "Class retrieved", "class": classes})
+    return jsonify({"message": "Class retrieved", "classes": classes})
 
 
 @app.route('/classes/teacher/<int:id>', methods=['GET'])
