@@ -5,7 +5,8 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 import bcrypt
 
 my_db = mysql.connector.connect(
-    host="192.168.50.210", # use at school
+    host="127.0.0.1",  # use at home
+#     host="192.168.50.210", # use at school
     user="class_user",
     password="password",
     database="Registration"
@@ -182,7 +183,43 @@ def get_class(id):
     sql = "SELECT * FROM classes WHERE id = %s"
     val = (id, )
     cursor.execute(sql, val)
-    return jsonify({'message': 'Class retrieved', 'class': cursor.fetchone()})
+    return jsonify({'message': 'Class retrieved', 'classes': cursor.fetch()})
+
+@app.route('/classes/students/<int:id>', methods=['GET'])
+def get_students_by_class(id):
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM class_students WHERE class_id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    return jsonify({'message': 'Students retrieved', 'students': cursor.fetchall()})
+
+@app.route('/student-classes', methods=['GET'])
+def get_student_classes():
+    user_id = request.args.get('user_id')
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM class_students WHERE user_id = %s"
+    val = (user_id, )
+    cursor.execute(sql, val)
+    return jsonify({'message': 'Classes retrieved', 'classes': cursor.fetchall()})
+
+@app.route('/all-classes-by-student', methods=['GET'])
+def get_all_classes_by_student():
+    user_id = request.args.get('student_id')
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM class_students WHERE user_id = %s"
+    vals = (user_id, )
+    cursor.execute(sql, vals)
+    student_classes = cursor.fetchall()
+    classes = []
+    for row in student_classes:
+        if row['class_id'] not in classes:
+            sql = "SELECT * FROM classes WHERE id = %s"
+            val = (row['class_id'], )
+            cursor.execute(sql, val)
+            class_info = cursor.fetchone()
+            if class_info:
+                classes.append(class_info)
+    return jsonify({'message': 'Classes retrieved', 'classes': classes})
 
 @app.route('/classes/teachers/<int:id>', methods=['GET'])
 def get_classes_by_teacher(id):

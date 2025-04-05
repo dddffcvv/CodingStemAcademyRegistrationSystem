@@ -19,20 +19,31 @@ export default function CoursesPage() {
     }
     const decodedUser = jwtDecode(token);
     setUser(decodedUser['sub']);
-    if (user['role'] !== 'Student') {
-      axios.get(`${config.backendUrl}/classes/${user['id']}`).then(response => {
-        setClasses(response.data['classes']);
-      }).catch(error => {
-        console.log(error);
-    });
-    } else if (user['role'] === 'Teacher') {
-      axios.get(`${config.backendUrl}/classes/teachers/${user['id']}`).then(response => {
+  }, []);
+
+  useEffect(() => {
+    // TODO: Show Admin all teacher classes and their information
+    if (user['role'] === 'Student') {
+      axios.get(`${config.backendUrl}/all-classes-by-student`, {
+        params: {
+          student_id: user['id']
+        }
+      }).then(response => {
+        console.log(response.data['classes'])
         setClasses(response.data['classes']);
       }).catch(error => {
         console.log(error);
       });
+    } else if (user['role'] === 'Teacher') {
+      axios.get(`${config.backendUrl}/classes/teachers/${user['id']}`).then(response => {
+        console.log(response.data)
+        setClasses(response.data['classes']);
+
+      }).catch(error => {
+        console.log(error);
+      });
     }
-  }, []);
+  }, [user])
 
   return (
     <div className="courses-container">
@@ -41,6 +52,7 @@ export default function CoursesPage() {
       {user && user['role'] === 'Student' ? (
         <div>
           <h2>Your Classes</h2>
+          { classes.length > 0 && (
           <ul>
             {classes.map((classItem) => (
               <li key={classItem['id']}>
@@ -50,7 +62,8 @@ export default function CoursesPage() {
               </li>
             ))}
           </ul>
-          {classes.length === 0 && <p>You are not enrolled in any classes.</p>}
+          )}
+          { classes.length === 0 && <p>You are not enrolled in any classes.</p>}
         </div>
       ) : user && user['role'] === 'Teacher' ? (
         <div>
