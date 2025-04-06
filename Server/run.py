@@ -34,7 +34,6 @@ def add_user():
     health_ins_num = data.get('health_ins_num')
     role = data.get('role')
     grade_level = data.get('grade_level', None)
-
     cursor = my_db.cursor()
 
     # TODO: Add validation for data
@@ -51,13 +50,31 @@ def add_user():
     return jsonify({"message": "User added"})
 
 
-
 def add_class_students(class_id, user_id):
     cursor = my_db.cursor()
     sql = "INSERT INTO class_students (class_id, user_id) VALUES (%s, %s)"
     vals = (class_id, user_id)
     cursor.execute(sql, vals)
     my_db.commit()
+    
+    
+#POST Class
+@app.route('/add_class', methods=['POST'])
+def add_class():
+    data = request.get_json()
+    #teacher_id, class_name, subject, semester_id
+    teacher_id = data.get('teacher_id')
+    class_name = data.get('class_name')
+    subject = data.get('subject')
+    semester_id = data.get('semester_id')
+
+    cursor = my_db.cursor()
+    sql = "INSERT INTO classes (teacher_id, class_name, subject, semester_id) VALUES(%s, %s, %s, %s)"
+    vals = (teacher_id, class_name, subject, semester_id)
+    cursor.execute(sql, vals)
+    my_db.commit()
+    return jsonify({'message': 'Class has been added successfully'})
+    
 
 ###################### DO NOT TOUCH #######################################
 def add_auth(user_id, password):
@@ -117,6 +134,19 @@ def get_class_students():
     cursor.execute("SELECT * FROM class_students")
     return cursor.fetchall()
 
+@app.route('/classes', methods=['GET'])
+def get_classes():
+    cursor = my_db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM classes")
+    return jsonify({'message': 'All classes retrieved', 'classes': cursor.fetchall()})
+
+@app.route('/classes/<int:id>', methods=['GET'])
+def get_class(id):
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM classes WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    return jsonify({'message': 'Class retrieved', 'class': cursor.fetchone()})
 
 @app.route('/users/by-name', methods=['GET'])
 def get_user_by_name():
@@ -177,6 +207,36 @@ def update_user():
     my_db.commit()
     return jsonify({"message": "User updated"})
 
+#PUT Class
+@app.route('/update_class/<int:id>', methods=['PUT'])
+def update_class(id):
+
+
+    data = request.get_json()
+    teacher_id = data.get('teacher_id')
+    class_name = data.get('class_name')
+    subject = data.get('subject')
+    semester_id = data.get('semester_id')
+
+
+    cursor = my_db.cursor()
+    sql = "SELECT * FROM classes WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    classes = cursor.fetchone()
+    if classes is None:
+        return None
+    sql = "UPDATE classes SET teacher_id = %s, class_name = %s, subject = %s, semester_id = %s"
+    vals = (
+        teacher_id if teacher_id else classes["teacher_id"], class_name if class_name else classes["class_name"], subject if subject else classes["subject"], semester_id if semester_id else classes["semester_id"], id
+    )
+    cursor.execute(sql, vals)
+    my_db.commit()
+    return jsonify({'message': 'Class was changed', 'class': cursor.fetchone()})
+
+
+
+
 
 # DELETE Data
 @app.route('/users', methods=['DELETE'])
@@ -195,10 +255,20 @@ def delete_student_class(student_id, class_id):
     val = (student_id, class_id)
     cursor.execute(sql, val)
     my_db.commit()
+    
+#DELETE classes
+@app.route('/delete_class/<int:id>', methods=['DELETE'])
+def delete_class(id):
+    cursor = my_db.cursor()
+    sql = "DELEzTE FROM classes WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    my_db.commit()
+    return jsonify({'message': 'Class has been deleted'})
 
 if __name__ == '__main__':
-    if my_db.is_connected():
+    if my_db.is_connected():    
         print("Connected to MySQL Database")
+        app.run(debug=True)
     else:
         print("Failed to connect to MySQL Database")
-    app.run(debug=True)
