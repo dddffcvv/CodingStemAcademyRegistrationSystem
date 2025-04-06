@@ -1,9 +1,9 @@
-"use client"
-
-//import * as React from "react"
+import React, { useState } from "react"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
-
+import axios from 'axios';
+import config from '../config';
+import { useRouter } from 'next/router';
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -16,8 +16,8 @@ import {
 
 
 export function DatePickerDemo() {
-  const [date, setDate] = React.useState<Date>(0)
- 
+  const [date, setDate] = useState(0)
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -43,12 +43,6 @@ export function DatePickerDemo() {
     </Popover>
   )
 }
-
-
-import React, { useState } from 'react';
-import axios from 'axios';
-import config from '../config';
-import { useRouter } from 'next/router';
 
 export default function Register() {
   const router = useRouter();
@@ -119,14 +113,7 @@ export default function Register() {
           placeholder="Last Name"
         />
         <br />
-        {DatePickerDemo}
-        <input
-          type="date"
-          name="birth_date"
-          value={formData.birth_date}
-          onChange={handleChange}
-          placeholder="Birth Date"
-        />
+        <DatePickerDemo />
         <br />
         <select
           name="gender"
