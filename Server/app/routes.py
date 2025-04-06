@@ -1,17 +1,19 @@
-import mysql.connector
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Blueprint, Flask, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-import logging
+import mysql.connector
+from .assignment import *
 import bcrypt
 
-from app import create_app
+app = Blueprint('app', __name__)
 
-app = create_app()
-## TODO: CREATE REAL SECRET KEY
-app.config["JWT_SECRET_KEY"] = "temporary secret key"
-jwt = JWTManager(app)
-CORS(app)
+my_db = mysql.connector.connect(
+    host="localhost",
+#     host="192.168.50.210",
+    user="class_user",
+    password="password",
+    database="Registration"
+)
+
 
 # POST Data
 @app.route('/register', methods=['POST'])
@@ -47,14 +49,6 @@ def add_user():
     return jsonify({"message": "User added"})
 
 
-
-def add_class_students(class_id, user_id):
-    cursor = my_db.cursor()
-    sql = "INSERT INTO class_students (class_id, user_id) VALUES (%s, %s)"
-    vals = (class_id, user_id)
-    cursor.execute(sql, vals)
-    my_db.commit()
-
 ###################### DO NOT TOUCH #######################################
 def add_auth(user_id, password):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -66,6 +60,16 @@ def add_auth(user_id, password):
     my_db.commit()
     return jsonify({"message": "Auth added"})
 
+@app.route('/assignments', methods=['POST'])
+def add_assignment_route():
+    data = request.get_json()
+    class_id = data.get('class_id')
+    title = data.get('title')
+    description = data.get('description')
+    due_date = data.get('due_date')
+
+    add_assignment(class_id, description, due_date)
+    return jsonify({"message": "Assignment added"})
 
 # GET Data
 @app.route('/login', methods=['POST'])
@@ -108,11 +112,6 @@ def get_users():
     cursor.execute("SELECT * FROM users")
     return jsonify({"message": "Retrieved All Users", "users": cursor.fetchall()})
 
-def get_class_students():
-    cursor = my_db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM class_students")
-    return cursor.fetchall()
-
 
 @app.route('/users/by-name', methods=['GET'])
 def get_user_by_name():
@@ -133,24 +132,73 @@ def get_user_by_id():
     cursor.execute(sql, val)
     return jsonify({"message": "User retrieved", "user": cursor.fetchone()})
 
+@app.route('/assignments', methods=['GET'])
+def get_assignments_by_class_route():
+    class_id = request.args.get('class_id', type=int)
+    assignments = get_assignments_by_class(class_id)
+    if assignments is None:
+        return jsonify({"message": "No assignments found"})
+    return jsonify({"message": "Assignment retrieved", "assignments": assignments})
+
+@app.route('/classes/<int:id>', methods=['GET'])
+def get_classes_by_id_route(id):
+    classes = get_classes_by_id(id)
+    return jsonify({"message": "Class retrieved", "classes": classes})
 
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
+@app.route('/classes/teacher/<int:id>', methods=['GET'])
+def get_classes_by_teacher_id_route(id):
+    classes = get_classes_by_teacher_id(id)
+    return jsonify({"message": "Classes retrieved", "classes": classes})
 
-@app.errorhandler(403)
-def forbidden(e):
-    logging.error(f"403 error: {e}")
-    return jsonify({"message": "Forbidden: You don't have permission to access this resource"}), 403
 
-def delete_student_class(student_id, class_id):
+# PUT Data
+@app.route('/users/update', methods=['PUT'])
+def update_user():
+    data = request.get_json()
+    id = data.get('id')
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    birth_date = data.get('birth_date')
+    gender = data.get('gender')
+    email = data.get('email')
+    phone = data.get('phone')
+    address = data.get('address')
+    guardian = data.get('guardian')
+    guardian_phone = data.get('guardian_phone')
+    health_ins = data.get('health_ins')
+    health_ins_num = data.get('health_ins_num')
+    role = data.get('role')
+    grade_level = data.get('grade_level', None)
+
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM users WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    user = cursor.fetchone()
+    if user is None:
+        return jsonify({"message": "User not found"})
+    sql = "UPDATE users SET first_name = %s, last_name = %s, birth_date" \
+    " = %s, gender = %s, email = %s, phone = %s, address = %s, guardian = %s, guardian_phone = %s, health_ins = %s, " \
+    "health_ins_num = %s, role = %s, grade_level = %s WHERE id = %s"
+    vals = (first_name if first_name else user["first_name"], last_name if last_name else user["last_name"],
+            birth_date if birth_date else user["birth_date"], gender if gender else user["gender"], email if email else user["email"],
+            phone if phone else user["phone"], address if address else user["address"], guardian if guardian else user["guardian"],
+            guardian_phone if guardian_phone else user["guardian_phone"], health_ins if health_ins else user["health_ins"],
+            health_ins_num if health_ins_num else user["health_ins_num"], role if role else user["role"],
+            grade_level if grade_level else user["grade_level"], id)
+    cursor.execute(sql, vals)
+    my_db.commit()
+    return jsonify({"message": "User updated"})
+
+
+# DELETE Data
+@app.route('/users', methods=['DELETE'])
+def delete_user():
+    id = request.args.get('id')
     cursor = my_db.cursor()
-    sql = "DELETE FROM class_students WHERE student_id = %s AND class_id = %s"
-    val = (student_id, class_id)
+    sql = "DELETE FROM users WHERE id = %s"
+    val = (id, )
     cursor.execute(sql, val)
     my_db.commit()
-
-if __name__ == '__main__':
-    port = 5000
-    print(f"App is running on port {port}")
-    app.run(debug=True, port=port)
+    return jsonify({"message": "User deleted"})
