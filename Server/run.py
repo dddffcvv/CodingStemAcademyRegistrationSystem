@@ -3,12 +3,15 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 import bcrypt
+import json
 
 my_db = mysql.connector.connect(
-    host="192.168.50.210",
+    host="localhost",
+#     host="192.168.50.210",
     user="class_user",
     password="password",
-    database="Registration"
+    database="Registration",
+    connection_timeout=1000
 )
 
 app = Flask(__name__)
@@ -104,7 +107,6 @@ def get_users():
     cursor.execute("SELECT * FROM users")
     return jsonify({"message": "Retrieved All Users", "users": cursor.fetchall()})
 
-
 @app.route('/users/by-name', methods=['GET'])
 def get_user_by_name():
     first_name = request.args.get('first_name')
@@ -123,6 +125,84 @@ def get_user_by_id():
     val = (id, )
     cursor.execute(sql, val)
     return jsonify({"message": "User retrieved", "user": cursor.fetchone()})
+
+
+@app.route('/teachers-classes', methods=['GET'])
+def get_classes_for_teacher(teacher_id):
+    teacher_id = request.args.get('teacher_id', teacher_id)
+    cursor = my_db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM classes WHERE teacher_id = %s", (teacher_id,))
+    return jsonify({"message": "Retrieved All Courses", "classes": cursor.fetchall()})
+
+@app.route('/classes-assignments', methods=['GET'])
+def get_assignments_for_class(class_id):
+    class_id = request.args.get('class_id', class_id)
+    cursor = my_db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM assignments WHERE class_id = %s", (class_id,))
+    return jsonify({"message": "Retrieved All Assignments", "assignments": cursor.fetchall()})
+
+@app.route('/assignments-submissions', methods=['GET'])
+def get_submissions_for_assignment(assignment_id):
+    assignment_id = request.args.get('assignment_id', assignment_id)
+    cursor = my_db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM submissions WHERE assignment_id = %s", (assignment_id,))
+    return jsonify({"message": "Retrieved All Submissions", "submissions": cursor.fetchall()})
+
+@app.route('/teacher-submissions', methods=['GET'])
+def get_submissions_for_teacher():
+    teacher_id = request.args.get('teacher_id')
+    classes = json.loads(get_classes_for_teacher(teacher_id).data)['classes']
+    assignments = []
+    for class_dict in classes:
+        res = json.loads(get_assignments_for_class(class_dict['id']).data)
+        assignments.append(res['assignments'])
+    submissions = []
+    for assignment_list in assignments:
+        for assignment in assignment_list:
+            res = json.loads(get_submissions_for_assignment(assignment['id']).data)
+            submissions.append(res['submissions'])
+    return jsonify({
+        "message": "Retrieved All Submissions",
+        "submissions": submissions,
+        "classes": classes,
+        "assignments": assignments
+    })
+
+
+@app.route('/student-submissions', methods=['GET'])
+def get_submissions_for_student():
+    student_id = request.args.get('student_id')
+
+    # Get class IDs for the student
+    cursor = my_db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM class_students WHERE user_id = %s", (student_id,))
+    class_ids = [row['class_id'] for row in cursor.fetchall()]
+
+    # Get class details
+    classes = []
+    if class_ids:
+        cursor.execute("SELECT * FROM classes WHERE id IN (%s)" % ','.join(['%s'] * len(class_ids)), class_ids)
+        classes = cursor.fetchall()
+
+    # Get assignments for the classes
+    assignments = []
+    for class_dict in classes:
+        res = json.loads(get_assignments_for_class(class_dict['id']).data)
+        assignments.append(res['assignments'])
+    submissions = []
+    for assignment_list in assignments:
+        for assignment in assignment_list:
+            cursor.execute("SELECT * FROM submissions WHERE assignment_id = %s AND student_id = %s", (assignment['id'], student_id))
+            res = cursor.fetchall()
+            print(res)
+            submissions.append(res)
+
+    return jsonify({
+        "message": "Retrieved Submissions for Student",
+        "classes": classes,
+        "assignments": assignments,
+        "submissions": submissions
+    })
 
 
 # PUT Data
