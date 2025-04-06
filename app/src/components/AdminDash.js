@@ -20,13 +20,18 @@ const AdminDash = () => {
       <br />
       <Link href="/assignments">View Assignments</Link>
       <br />
-      <Link href="/enroll">Enroll in a Course</Link>
+      <Link href="/assign-courses">Assign Courses</Link>
       <br />
       <Link href="/calendar">View Calendar</Link>
       <br />
       <Link href="/semesters">View Semesters</Link>
       <br />
       <Link href="/grades">View Grades</Link>
+      <br />
+      <button onClick={() => {
+        localStorage.removeItem('token');
+        window.location.href = '/';
+      }}>Logout</button>
     </div>
   );
 }
