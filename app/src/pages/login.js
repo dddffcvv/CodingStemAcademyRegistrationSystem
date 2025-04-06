@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import config from '../config';
+import {Button} from "@/components/ui/button";
+import {Card, CardHeader, CardTitle, CardContent, CardDescription} from "@/components/ui/card";
+import {Label} from "@/components/ui/label";
+import {Input} from "@/components/ui/input";
 
 export default function login() {
   const [email, setEmail] = useState('');
@@ -28,25 +32,42 @@ export default function login() {
   };
 
   return (
-    <div>
-      <h1>Login</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <br />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <br />
-        <button type="submit">Login</button>
-      </form>
+    <div className="flex items-center justify-center h-screen">
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">Login</CardTitle>
+          <CardDescription>
+            Login with your email and password
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-6">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                </div>
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            <Button type="submit">Login</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -6,8 +6,8 @@ import bcrypt
 import json
 
 my_db = mysql.connector.connect(
-    host="localhost",
-#     host="192.168.50.210",
+#     host="localhost",
+    host="192.168.50.210",
     user="class_user",
     password="password",
     database="Registration",
