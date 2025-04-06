@@ -61,6 +61,14 @@ def add_user():
     return jsonify({"message": "Login successful", "access_token": access_token})
 
 
+def add_class_students(class_id, user_id):
+    cursor = my_db.cursor()
+    sql = "INSERT INTO class_students (class_id, user_id) VALUES (%s, %s)"
+    vals = (class_id, user_id)
+    cursor.execute(sql, vals)
+    my_db.commit()
+    
+    
 #POST Class
 @app.route('/add_class', methods=['POST'])
 def add_class():
@@ -116,8 +124,6 @@ def add_multiple_classes():
         my_db.commit()
     return jsonify({'message': 'Students have been added to classes successfully'})
 
-
-
 ###################### DO NOT TOUCH #######################################
 def add_auth(user_id, password):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -170,6 +176,11 @@ def get_users():
     cursor = my_db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM users")
     return jsonify({"message": "Retrieved All Users", "users": cursor.fetchall()})
+
+def get_class_students():
+    cursor = my_db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM class_students")
+    return cursor.fetchall()
 
 @app.route('/classes', methods=['GET'])
 def get_classes():
@@ -328,6 +339,13 @@ def delete_user():
     my_db.commit()
     return jsonify({"message": "User deleted"})
 
+def delete_student_class(student_id, class_id):
+    cursor = my_db.cursor()
+    sql = "DELETE FROM class_students WHERE student_id = %s AND class_id = %s"
+    val = (student_id, class_id)
+    cursor.execute(sql, val)
+    my_db.commit()
+    
 #DELETE classes
 @app.route('/delete_class/<int:id>', methods=['DELETE'])
 def delete_class(id):
@@ -337,9 +355,6 @@ def delete_class(id):
     cursor.execute(sql, val)
     my_db.commit()
     return jsonify({'message': 'Class has been deleted'})
-
-
-
 
 if __name__ == '__main__':
     if my_db.is_connected():
