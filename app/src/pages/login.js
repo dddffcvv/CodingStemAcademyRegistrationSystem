@@ -2,6 +2,17 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import config from '../config';
+import {cn} from "@/lib/utils";
+import {Button} from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function login() {
   const [email, setEmail] = useState('');
@@ -28,25 +39,37 @@ export default function login() {
   };
 
   return (
-    <div>
-      <h1>Login</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <br />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <br />
-        <button type="submit">Login</button>
-      </form>
+    <div className={"flex items-center justify-center h-screen"}>
+      <Card>
+        <CardHeader className="text-center">
+           <CardTitle>Login</CardTitle>
+            <CardDescription>
+              Please login to your account
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-6">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                </div>
+                <Input id="password" type="password" required />
+              </div>
+            <Button type="submit" className="w-full">Login</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }
