@@ -55,7 +55,8 @@ export default function login() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="email@example.com"
                   required
                 />
               </div>
@@ -63,7 +64,7 @@ export default function login() {
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
-                <Input id="password" type="password" required />
+                <Input id="password" type="password" onChange={(e) => setPassword(e.target.value)} required />
               </div>
             <Button type="submit" className="w-full">Login</Button>
             </div>
