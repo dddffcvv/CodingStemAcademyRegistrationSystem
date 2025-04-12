@@ -41,7 +41,6 @@ const TeacherDash = () => {
         </Card>
         <Button onClick={() => {logout()} }>Logout</Button>
       </div>
-
     </div>
   );
 }
