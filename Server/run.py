@@ -2,7 +2,9 @@ import mysql.connector
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import logging
 import bcrypt
+from app import create_app
 
 my_db = mysql.connector.connect(
     host="127.0.0.1",  # use at home
@@ -11,8 +13,11 @@ my_db = mysql.connector.connect(
     password="password",
     database="Registration"
 )
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
 
-app = Flask(__name__)
+
+app = create_app()
 ## TODO: CREATE REAL SECRET KEY
 app.config["JWT_SECRET_KEY"] = "temporary secret key"
 jwt = JWTManager(app)
@@ -317,44 +322,6 @@ def get_class(id):
     return jsonify({'message': 'Class retrieved', 'class': res})
 
 
-# PUT Data
-@app.route('/users/update', methods=['PUT'])
-def update_user():
-    data = request.get_json()
-    id = data.get('id')
-    first_name = data.get('first_name')
-    last_name = data.get('last_name')
-    birth_date = data.get('birth_date')
-    gender = data.get('gender')
-    email = data.get('email')
-    phone = data.get('phone')
-    address = data.get('address')
-    guardian = data.get('guardian')
-    guardian_phone = data.get('guardian_phone')
-    health_ins = data.get('health_ins')
-    health_ins_num = data.get('health_ins_num')
-    role = data.get('role')
-    grade_level = data.get('grade_level', None)
-
-    cursor = my_db.cursor(dictionary=True)
-    sql = "SELECT * FROM users WHERE id = %s"
-    val = (id, )
-    cursor.execute(sql, val)
-    user = cursor.fetchone()
-    if user is None:
-        return jsonify({"message": "User not found"})
-    sql = "UPDATE users SET first_name = %s, last_name = %s, birth_date" \
-    " = %s, gender = %s, email = %s, phone = %s, address = %s, guardian = %s, guardian_phone = %s, health_ins = %s, " \
-    "health_ins_num = %s, role = %s, grade_level = %s WHERE id = %s"
-    vals = (first_name if first_name else user["first_name"], last_name if last_name else user["last_name"],
-            birth_date if birth_date else user["birth_date"], gender if gender else user["gender"], email if email else user["email"],
-            phone if phone else user["phone"], address if address else user["address"], guardian if guardian else user["guardian"],
-            guardian_phone if guardian_phone else user["guardian_phone"], health_ins if health_ins else user["health_ins"],
-            health_ins_num if health_ins_num else user["health_ins_num"], role if role else user["role"],
-            grade_level if grade_level else user["grade_level"], id)
-    cursor.execute(sql, vals)
-    my_db.commit()
-    return jsonify({"message": "User updated"})
 
 #PUT Class
 @app.route('/update_class/<int:id>', methods=['PUT'])
@@ -382,19 +349,10 @@ def update_class(id):
     return jsonify({'message': 'Class was changed', 'class': cursor.fetchone()})
 
 
-
-
-
-# DELETE Data
-@app.route('/users', methods=['DELETE'])
-def delete_user():
-    id = request.args.get('id')
-    cursor = my_db.cursor()
-    sql = "DELETE FROM users WHERE id = %s"
-    val = (id, )
-    cursor.execute(sql, val)
-    my_db.commit()
-    return jsonify({"message": "User deleted"})
+@app.errorhandler(403)
+def forbidden(e):
+    logging.error(f"403 error: {e}")
+    return jsonify({"message": "Forbidden: You don't have permission to access this resource"}), 403
 
 def delete_student_class(student_id, class_id):
     cursor = my_db.cursor()
@@ -422,8 +380,6 @@ def get_db_connection():
 
 
 if __name__ == '__main__':
-    if my_db.is_connected():
-        print("Connected to MySQL Database")
-        app.run(debug=True)
-    else:
-        print("Failed to connect to MySQL Database")
+    port = 5000
+    print(f"App is running on port {port}")
+    app.run(debug=True, port=port)
