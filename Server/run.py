@@ -397,8 +397,6 @@ def update_class(id):
     class_name = data.get('class_name')
     subject = data.get('subject')
     semester_id = data.get('semester_id')
-
-
     cursor = my_db.cursor()
     sql = "SELECT * FROM classes WHERE id = %s"
     val = (id, )
