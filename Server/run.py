@@ -72,8 +72,8 @@ def add_class_students(class_id, user_id):
     vals = (class_id, user_id)
     cursor.execute(sql, vals)
     my_db.commit()
-    
-    
+
+
 #POST Class
 @app.route('/add_class', methods=['POST'])
 def add_class():
@@ -197,13 +197,6 @@ def get_classes():
     cursor.execute("SELECT * FROM classes")
     return jsonify({'message': 'All classes retrieved', 'classes': cursor.fetchall()})
 
-@app.route('/classes/<int:id>', methods=['GET'])
-def get_class(id):
-    cursor = my_db.cursor(dictionary=True)
-    sql = "SELECT * FROM classes WHERE id = %s"
-    val = (id, )
-    cursor.execute(sql, val)
-    return jsonify({'message': 'Class retrieved', 'classes': cursor.fetch()})
 
 @app.route('/classes/students/<int:id>', methods=['GET'])
 def get_students_by_class(id):
@@ -360,7 +353,7 @@ def delete_student_class(student_id, class_id):
     val = (student_id, class_id)
     cursor.execute(sql, val)
     my_db.commit()
-    
+
 #DELETE classes
 @app.route('/delete_class/<int:id>', methods=['DELETE'])
 def delete_class(id):
