@@ -175,12 +175,16 @@ def login():
 def get_users():
     cursor = my_db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM users")
-    return jsonify({"message": "Retrieved All Users", "users": cursor.fetchall()})
+    res = cursor.fetchall()
+    cursor.close()
+    return jsonify({"message": "Retrieved All Users", "users": res})
 
 def get_class_students():
     cursor = my_db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM class_students")
-    return cursor.fetchall()
+    res = cursor.fetchall()
+    cursor.close()
+    return res
 
 @app.route('/classes', methods=['GET'])
 def get_classes():
@@ -213,10 +217,66 @@ def get_student_classes():
     cursor.execute(sql, val)
     return jsonify({'message': 'Classes retrieved', 'classes': cursor.fetchall()})
 
+@app.route('/users/by-name', methods=['GET'])
+def get_user_by_name():
+    first_name = request.args.get('first_name')
+    last_name = request.args.get('last_name')
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM users WHERE first_name = %s AND last_name = %s"
+    val = (first_name, last_name)
+    cursor.execute(sql, val)
+    users = cursor.fetchall()
+    cursor.close()
+    return jsonify({"message": "Retrieved All Users by name", "users": users})
+
+@app.route('/user', methods=['GET'])
+def get_user_by_id():
+    id = request.args.get('id')
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+    sql = "SELECT * FROM users WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    user = cursor.fetchone()
+    cursor.close()
+    return jsonify({"message": "User retrieved", "user": user})
+
+@app.route('/classes', methods=['GET'])
+def get_all_classes():
+    cursor = my_db.cursor(dictionary=True)
+    sql = "SELECT * FROM classes"
+    cursor.execute(sql)
+    classes = cursor.fetchall()
+    cursor.close()
+    return jsonify({"message": "Retrieved All Classes", "classes": classes})
+
+@app.route('/get-teacher-by-class', methods=['GET'])
+def get_teacher_by_class():
+    id = request.args.get('class_id')
+
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+    sql = "SELECT * FROM classes WHERE id = %s"
+    val = (id, )
+    cursor.execute(sql, val)
+    class_info = cursor.fetchone()
+    if class_info is None:
+        return jsonify({"message": "Class not found"})
+    sql = "SELECT * FROM users WHERE id = %s"
+    val = (class_info['teacher_id'], )
+    cursor.execute(sql, val)
+    teacher = cursor.fetchone()
+    cursor.close()
+    if teacher is None:
+        return jsonify({"message": "Teacher not found"})
+    return jsonify({"message": "Teacher retrieved", "teacher": teacher})
+
+
 @app.route('/all-classes-by-student', methods=['GET'])
 def get_all_classes_by_student():
     user_id = request.args.get('student_id')
-    cursor = my_db.cursor(dictionary=True)
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
     sql = "SELECT * FROM class_students WHERE user_id = %s"
     vals = (user_id, )
     cursor.execute(sql, vals)
@@ -230,34 +290,31 @@ def get_all_classes_by_student():
             class_info = cursor.fetchone()
             if class_info:
                 classes.append(class_info)
+    cursor.close()
     return jsonify({'message': 'Classes retrieved', 'classes': classes})
 
-@app.route('/classes/teachers/<int:id>', methods=['GET'])
-def get_classes_by_teacher(id):
-    cursor = my_db.cursor(dictionary=True)
+@app.route('/all-classes-by-teacher', methods=['GET'])
+def get_classes_by_teacher():
+    id = request.args.get('teacher_id')
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
     sql = "SELECT * FROM classes WHERE teacher_id = %s"
     val = (id, )
     cursor.execute(sql, val)
-    return jsonify({'message': 'Classes retrieved', 'classes': cursor.fetchall()})
+    res = cursor.fetchall()
+    cursor.close()
+    return jsonify({'message': 'Classes retrieved', 'classes': res})
 
-@app.route('/users/by-name', methods=['GET'])
-def get_user_by_name():
-    first_name = request.args.get('first_name')
-    last_name = request.args.get('last_name')
-    cursor = my_db.cursor(dictionary=True)
-    sql = "SELECT * FROM users WHERE first_name = %s AND last_name = %s"
-    val = (first_name, last_name)
-    cursor.execute(sql, val)
-    return jsonify({"message": "Retrieved All Users by name", "users": cursor.fetchall()})
-
-@app.route('/users', methods=['GET'])
-def get_user_by_id():
-    id = request.args.get('id')
-    cursor = my_db.cursor(dictionary=True)
-    sql = "SELECT * FROM users WHERE id = %s"
+@app.route('/class/<int:id>', methods=['GET'])
+def get_class(id):
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+    sql = "SELECT * FROM classes WHERE id = %s"
     val = (id, )
     cursor.execute(sql, val)
-    return jsonify({"message": "User retrieved", "user": cursor.fetchone()})
+    res = cursor.fetchone()
+    cursor.close()
+    return jsonify({'message': 'Class retrieved', 'class': res})
 
 
 # PUT Data
@@ -355,6 +412,14 @@ def delete_class(id):
     cursor.execute(sql, val)
     my_db.commit()
     return jsonify({'message': 'Class has been deleted'})
+
+
+def get_db_connection():
+    global my_db
+    if not my_db.is_connected():
+        my_db.reconnect()
+    return my_db
+
 
 if __name__ == '__main__':
     if my_db.is_connected():
