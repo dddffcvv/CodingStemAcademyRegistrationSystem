@@ -122,9 +122,10 @@ export function AppSidebar({ ...props }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {loading ? (<span>Loading...</span>) : (
+        {loading ? (<span>Loading...</span>) :
+          user["role"] !== 'Admin' ? (
           <NavClasses classes={classes} />
-        )}
+        ) : null }
         <NavSecondary />
       </SidebarContent>
       <SidebarFooter>
