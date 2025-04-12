@@ -2,17 +2,10 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import config from '../config';
-import {cn} from "@/lib/utils";
 import {Button} from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {Card, CardHeader, CardTitle, CardContent, CardDescription} from "@/components/ui/card";
+import {Label} from "@/components/ui/label";
+import {Input} from "@/components/ui/input";
 
 export default function login() {
   const [email, setEmail] = useState('');
@@ -39,13 +32,13 @@ export default function login() {
   };
 
   return (
-    <div className={"flex items-center justify-center h-screen"}>
+    <div className="flex items-center justify-center h-screen">
       <Card>
         <CardHeader className="text-center">
-           <CardTitle>Login</CardTitle>
-            <CardDescription>
-              Please login to your account
-            </CardDescription>
+          <CardTitle className="text-xl">Login</CardTitle>
+          <CardDescription>
+            Login with your email and password
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
@@ -53,8 +46,8 @@ export default function login() {
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
-                  id="email"
                   type="email"
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="email@example.com"
                   required
@@ -66,7 +59,7 @@ export default function login() {
                 </div>
                 <Input id="password" type="password" onChange={(e) => setPassword(e.target.value)} required />
               </div>
-            <Button type="submit" className="w-full">Login</Button>
+            <Button type="submit">Login</Button>
             </div>
           </form>
         </CardContent>

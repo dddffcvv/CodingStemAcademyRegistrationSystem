@@ -24,6 +24,8 @@ const StudentDash = () => {
       <br />
       <Link href="/calendar">View Calendar</Link>
       <br />
+      <Link href="/submissions">View Submissions</Link>
+      <br />
       <Link href="/grades">View Grades</Link>
       <br />
       <button onClick={() => {
