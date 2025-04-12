@@ -47,21 +47,17 @@ export default function login() {
                 <Label htmlFor="email">Email</Label>
                 <Input
                   type="email"
-                  placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="email@example.com"
+                  required
                 />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <Input id="password" type="password" onChange={(e) => setPassword(e.target.value)} required />
               </div>
             <Button type="submit">Login</Button>
             </div>
