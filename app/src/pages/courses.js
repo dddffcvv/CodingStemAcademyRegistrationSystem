@@ -35,10 +35,13 @@ export default function CoursesPage() {
         console.log(error);
       });
     } else if (user['role'] === 'Teacher') {
-      axios.get(`${config.backendUrl}/classes/teachers/${user['id']}`).then(response => {
+      axios.get(`${config.backendUrl}/all-classes-by-teacher`, {
+        params: {
+          teacher_id: user['id']
+        }
+      }).then(response => {
         console.log(response.data)
         setClasses(response.data['classes']);
-
       }).catch(error => {
         console.log(error);
       });
