@@ -29,6 +29,7 @@ const ClassPage = () => {
   // YOUR CODE HERE
   return (
     <Layout title={assignmentData.details}>
+        
     </Layout>
   );
 };
