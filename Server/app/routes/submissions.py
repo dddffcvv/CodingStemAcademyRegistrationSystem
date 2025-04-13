@@ -6,6 +6,18 @@ submissions_bp = Blueprint('submissions', __name__)
 
 # GET functions
 @submissions_bp.route('/assignments-submissions', methods=['GET'])
+def get_submissions_for_assignment():
+    my_db = get_db_connection()
+    try:
+        assignment_id = request.args.get('assignment_id')
+        cursor = my_db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM submissions WHERE assignment_id = %s", (assignment_id,))
+        submissions = cursor.fetchall()
+    finally:
+        cursor.close()
+        my_db.close()
+    return jsonify({"message": "Retrieved All Submissions", "submissions": submissions})
+
 def get_submissions_for_assignment(assignment_id):
     my_db = get_db_connection()
     try:
@@ -106,3 +118,17 @@ def get_submissions_for_student():
         "assignments": assignments,
         "submissions": submissions
     })
+
+@submissions_bp.route('/submissions/student', methods=['GET'])
+def get_submissions_by_class():
+    assignment_id = request.args.get('assignment_id')
+    student_id = request.args.get('student_id')
+    my_db = get_db_connection()
+    try:
+        cursor = my_db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM submissions WHERE assignment_id = %s AND student_id = %s", (assignment_id, student_id))
+        submissions = cursor.fetchall()
+    finally:
+        cursor.close()
+        my_db.close()
+    return jsonify({"message": "Retrieved All Submissions", "submissions": submissions})

@@ -2,12 +2,16 @@ import {Layout} from "@/app/layout";
 import React, { useEffect, useState } from 'react';
 import {Card} from "@/components/ui/card";
 import {useRouter} from "next/router";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import config from "@/config";
 
 export default function Grades() {
   const router = useRouter();
   const { class_id } = router.query;
   const [submissions, setSubmissions] = useState([]);
-  const [assignment, setAssignment] = useState({});
+  const [assignments, setAssignments] = useState([]);
   const [scores, setScores] = useState([]);
   const [user, setUser] = useState({});
   const [loading, setLoading] = useState(true);
@@ -23,9 +27,19 @@ export default function Grades() {
   , []);
 
   useEffect(() => {
-    // Fetch assignment information (Assignments, Scores, submission) here using Axios
+    // Fetch assignment information (Assignments) here using Axios
     
-  })
+    
+  }, [class_id]);
+
+  useEffect(() => {
+    // Fetch Submissions and Scores here using Axios
+   
+    })
+    
+
+  }, [assignments]);
+
 
   // Your Code here
   return (
