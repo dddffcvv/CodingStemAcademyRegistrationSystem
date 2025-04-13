@@ -35,8 +35,6 @@ export default function Grades() {
   useEffect(() => {
     // Fetch Submissions and Scores here using Axios
    
-    })
-    
 
   }, [assignments]);
 
