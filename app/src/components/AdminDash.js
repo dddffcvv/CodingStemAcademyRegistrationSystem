@@ -30,7 +30,7 @@ const AdminDash = () => {
                 <Link href="/calendar">View Calendar</Link>
                 <Link href="/admin/grades">View Grades</Link>
                 <Link href="/admin/payments">Manage Payments</Link>
-                <Link href="/users">Manage Users</Link>
+                <Link href="/admin/users">Manage Users</Link>
               </ul>
             </CardContent>
           </Card>
