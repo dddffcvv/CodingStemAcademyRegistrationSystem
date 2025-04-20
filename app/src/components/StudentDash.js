@@ -20,11 +20,18 @@ const StudentDash = () => {
       <br />
       <Link href="/assignments">View Assignments</Link>
       <br />
-      <Link href="/enroll">Enroll in a Course</Link>
+      <Link href="/register-classes">Enroll in a Course</Link>
       <br />
       <Link href="/calendar">View Calendar</Link>
       <br />
+      <Link href="/submissions">View Submissions</Link>
+      <br />
       <Link href="/grades">View Grades</Link>
+      <br />
+      <button onClick={() => {
+        localStorage.removeItem('token');
+        window.location.href = '/';
+      }}>Logout</button>
     </div>
   );
 }

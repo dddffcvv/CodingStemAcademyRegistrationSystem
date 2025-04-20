@@ -3,6 +3,8 @@ import {useEffect, useState} from "react";
 import { jwtDecode } from 'jwt-decode'
 import StudentDash from "@/components/StudentDash";
 import TeacherDash from "@/components/TeacherDash";
+import AdminDash from "@/components/AdminDash";
+import {Layout} from "@/app/layout";
 
 export default function Dashboard() {
   const [role, setRole] = useState('');
@@ -26,9 +28,11 @@ export default function Dashboard() {
 
   return (
     <div>
-      {role === 'Student' && <StudentDash />}
-      {role === 'Teacher' && <TeacherDash />}
-      {role === 'Admin' && <h1>Admin Dashboard</h1>}
+      <Layout>
+        {role === 'Student' && <StudentDash />}
+        {role === 'Teacher' && <TeacherDash />}
+        {role === 'Admin' && <AdminDash />}
+      </Layout>
     </div>
   );
 }

@@ -35,7 +35,7 @@ ___
 - Are we looking at doing assignments on the computer?
 
 
-## AI-Powered Score Submission System Project
+## AI-Powered Score Submissions System Project
 ___
 ### Teacher: Joshua
 ### Team:
